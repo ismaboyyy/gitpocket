@@ -2,17 +2,16 @@
 
 Un tableau de bord simple pour retrouver ses dépôts GitHub et ses collaborations.
 
-Chaque utilisateur se connecte avec **son compte GitHub** et voit **ses propres dépôts**. Fonctionne sur un ordinateur ou un Raspberry Pi, avec Node.js et sans dépendance npm.
+Repocket fonctionne **en local sur ton ordinateur**, avec Node.js et sans dépendance npm. Chaque personne installe sa propre copie et utilise **son compte GitHub** pour retrouver ses dépôts.
 
 ## Quel mode choisir ?
 
 | Besoin | Mode | À configurer |
 | --- | --- | --- |
-| Utiliser une instance déjà hébergée | Connexion GitHub dans le navigateur | Rien à installer ; cliquer sur « Se connecter avec GitHub » |
-| Installer sa propre instance, en local ou pour plusieurs utilisateurs | `github` | Une OAuth App GitHub pour cette instance |
-| Consulter uniquement ses dépôts sur son ordinateur | `local` | GitHub CLI connecté à son compte |
+| Consulter ses dépôts sur son ordinateur — le plus simple | `local` | GitHub CLI connecté à son compte |
+| Se connecter à GitHub dans le navigateur | `github` | Une OAuth App GitHub pour son installation locale |
 
-Pour une première installation avec connexion dans le navigateur, suivre les étapes ci-dessous. Pour un usage personnel sans OAuth App, suivre plutôt le [mode local](#mode-personnel-local-avec-github-cli).
+Pour commencer simplement, suivre le [mode local avec GitHub CLI](#mode-personnel-local-avec-github-cli). La connexion OAuth dans le navigateur reste disponible en option ; elle demande une configuration supplémentaire.
 
 ## Fonctionnalités
 
@@ -24,7 +23,34 @@ Pour une première installation avec connexion dans le navigateur, suivre les é
 - Par défaut : vue **Tous**, tri **Dernier push**, filtres ouverts.
 - L’application utilise uniquement des requêtes de lecture vers l’API des dépôts.
 
-## Installation avec connexion GitHub
+## Mode personnel local avec GitHub CLI
+
+Installer [Node.js](https://nodejs.org/en/download) **22.9+** ou 24+, [Git](https://git-scm.com/downloads) et [GitHub CLI](https://cli.github.com/). Aucune OAuth App ni aucun client secret n’est nécessaire.
+
+Dans un terminal :
+
+```sh
+gh auth login --hostname github.com
+gh repo clone ismaboyyy/repocket
+cd repocket
+cp .env.example .env
+```
+
+Le dépôt est actuellement privé : ton compte doit avoir reçu l’accès pour le cloner. Si tu as déjà téléchargé le projet, place-toi simplement dans son dossier et crée `.env` s’il n’existe pas. Sous PowerShell, utiliser `Copy-Item` à la place de `cp`.
+
+Dans `.env` :
+
+```dotenv
+AUTH_MODE=local
+APP_URL=http://127.0.0.1:3000
+PORT=3000
+```
+
+Lancer `npm start`, puis ouvrir **http://127.0.0.1:3000** : tes dépôts apparaissent sans formulaire de connexion dans la page. Garder le terminal ouvert ; **Ctrl+C** arrête le site.
+
+Ce mode utilise le compte GitHub CLI de l’utilisateur système et n’a pas de connexion par visiteur. **Ne pas le publier via un proxy ou un tunnel** : toute personne pouvant y accéder verrait les dépôts du compte local. Le serveur refuse une `APP_URL` distante dans ce mode.
+
+## Installation avec connexion GitHub dans le navigateur (optionnel)
 
 ### 1. Vérifier les prérequis
 
@@ -107,59 +133,15 @@ Ouvrir **http://127.0.0.1:3000**, cliquer sur **Se connecter avec GitHub** et au
 
 Garder le terminal ouvert pendant l’utilisation. Pour arrêter le serveur, appuyer sur **Ctrl+C** ; pour le relancer, exécuter `npm start`. Après une modification de `.env`, arrêter puis relancer le serveur.
 
-Les visiteurs d’une instance hébergée n’ont rien à installer et n’ont pas besoin de créer leur propre OAuth App. Les personnes qui hébergent leur propre copie créent leur propre OAuth App et leurs propres secrets.
+Chaque personne qui utilise ce mode crée son OAuth App et conserve ses propres identifiants dans son fichier `.env` local.
 
 ### Autorisations GitHub
 
 Le scope OAuth **`repo`** est demandé pour découvrir les dépôts privés et les invitations. **Ce scope permet aussi des écritures** : GitHub OAuth ne propose pas de scope global équivalent limité à la lecture des dépôts privés. Repocket n’utilise pas ces capacités d’écriture. Lire les [scopes GitHub officiels](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps).
 
-Connectez-vous uniquement sur une instance de confiance : son opérateur traite les jetons des utilisateurs. Une organisation peut exiger une approbation OAuth ou une autorisation SSO ; dans ce cas certains dépôts peuvent manquer.
+Une organisation peut exiger une approbation OAuth ou une autorisation SSO ; dans ce cas certains dépôts peuvent manquer.
 
-## Mode personnel local avec GitHub CLI
-
-Télécharger d’abord le projet et copier `.env.example` vers `.env` comme aux étapes 1 et 2. Pour utiliser uniquement son propre compte sur sa machine, sans créer d’OAuth App : installer [GitHub CLI](https://cli.github.com/), puis :
-
-```sh
-gh auth login --hostname github.com
-```
-
-Dans `.env` :
-
-```dotenv
-AUTH_MODE=local
-APP_URL=http://127.0.0.1:3000
-PORT=3000
-```
-
-Lancer `npm start`. Ce mode utilise le compte GitHub CLI de l’utilisateur système et n’a pas de connexion par visiteur. **Ne pas le publier via un proxy ou un tunnel** : toute personne pouvant y accéder verrait les dépôts du compte local. Le serveur refuse une `APP_URL` distante dans ce mode.
-
-## Hébergement sur Raspberry Pi ou autre serveur
-
-Cette partie concerne l’hébergeur. Les visiteurs utiliseront simplement leur navigateur et leur compte GitHub. Remplacer `github.example.com` par son vrai sous-domaine partout dans les étapes suivantes.
-
-1. Installer Node.js 22.9+ ou 24+ et copier le projet.
-2. Créer une OAuth App distincte pour la production :
-   - Homepage URL : `https://github.example.com`.
-   - Callback : `https://github.example.com/auth/callback`.
-3. Configurer `.env` avec `AUTH_MODE=github`, `APP_URL=https://github.example.com`, les identifiants OAuth correspondants et `PORT=3000`.
-4. Exécuter `npm start` avec un service `systemd` ou le mécanisme existant du serveur, depuis le dossier du projet. Le compte système doit pouvoir lire `.env`. Restreindre ses permissions, par exemple `chmod 600 .env`.
-5. Placer un reverse proxy HTTPS devant **`127.0.0.1:3000`**, en conservant le `Host` public. Exemple Caddy :
-
-```caddyfile
-github.example.com {
-    reverse_proxy 127.0.0.1:3000
-}
-```
-
-6. Configurer le DNS et les possibilités de connexion à domicile selon l’installation existante. Ne pas exposer directement le port 3000.
-
-Pour la configuration Caddy standard, le DNS doit pointer vers l’IP publique de la maison et les ports 80 et 443 doivent atteindre Caddy sur le Pi. Si l’IP change, utiliser un DNS dynamique. Si la connexion est derrière une IP partagée et refuse les connexions entrantes, prévoir un tunnel ou un autre point d’entrée. [Guide HTTPS Caddy](https://caddyserver.com/docs/quick-starts/https)
-
-Avant de partager l’adresse : ouvrir le site en navigation privée, vérifier que les dépôts exigent une connexion, tester son compte, puis la déconnexion. En mode `github`, une requête non authentifiée vers `/api/repos` doit répondre **401**. Vérifier aussi le fonctionnement après redémarrage du Pi.
-
-En mode GitHub, l’interface de connexion est publique, mais `/api/repos` nécessite une session personnelle. **Il ne faut pas connecter `gh` au compte du propriétaire sur le serveur** : chaque visiteur autorise son compte via OAuth. Un second login devant le proxy n’est pas nécessaire pour séparer les utilisateurs, mais peut restreindre l’ensemble du site si souhaité.
-
-### Sessions et confidentialité
+## Sessions et confidentialité
 
 - OAuth avec `state` lié au navigateur et PKCE S256 ; callback à usage unique.
 - Session opaque dans un cookie `HttpOnly`, `SameSite=Lax`, et `Secure` en HTTPS.
@@ -185,7 +167,7 @@ npm test
 
 Les tests couvrent les filtres, la pagination, l’isolation entre deux comptes, OAuth/PKCE, les cookies, l’expiration, la déconnexion et les contrôles d’origine. GitHub est simulé dans les tests ; aucun secret n’est requis. La CI les exécute sur Node.js 22 et 24.
 
-Pour tester réellement OAuth, créer l’application locale décrite plus haut. Vérifier la connexion de deux comptes, les dépôts affichés, le refus de `/api/repos` sans cookie et la déconnexion. L’inscription de l’OAuth App et l’autorisation initiale doivent être effectuées par l’hébergeur et chaque utilisateur.
+Pour tester réellement OAuth, créer l’application locale décrite plus haut. Vérifier la connexion de deux comptes, les dépôts affichés, le refus de `/api/repos` sans cookie et la déconnexion. Chaque personne configure son OAuth App et autorise son propre compte.
 
 Pour contribuer : proposer une issue ou une pull request, garder les changements simples et exécuter `npm test`.
 
@@ -199,7 +181,7 @@ npm test
 npm start
 ```
 
-Si le site est géré par un service sur le Pi, redémarrer ce service au lieu de lancer une deuxième instance avec `npm start`. Le fichier `.env` n’est pas remplacé par Git. Un redémarrage déconnecte les utilisateurs ; ils pourront se reconnecter avec GitHub.
+Le fichier `.env` n’est pas remplacé par Git. En mode OAuth, un redémarrage déconnecte les utilisateurs ; ils pourront se reconnecter avec GitHub.
 
 ## Dépannage
 
@@ -210,10 +192,10 @@ Si le site est géré par un service sur le Pi, redémarrer ce service au lieu d
 | `package.json` introuvable | Se placer dans le dossier `repocket` avant `npm start` |
 | Message demandant `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET` | Créer `.env` et compléter les deux valeurs, ou choisir le mode `local` |
 | GitHub indique un problème de callback | Vérifier l’URL de callback dans l’OAuth App : elle doit correspondre à `APP_URL` suivi de `/auth/callback` |
-| Erreur 403 ou page inaccessible via un domaine | Vérifier `APP_URL`, HTTPS et le `Host` transmis par le reverse proxy ; ne pas utiliser le mode `local` pour héberger le site |
+| Erreur 403 en ouvrant le site | Utiliser l’adresse exacte indiquée dans `APP_URL`, notamment `127.0.0.1` plutôt que `localhost` si c’est la valeur configurée |
 | Connexion expirée ou invalide | Revenir à l’accueil et recommencer ; utiliser le même navigateur et accepter les cookies du site |
 | Un dépôt privé manque | Vérifier l’autorisation OAuth, l’approbation de l’organisation et le SSO ; cliquer sur Actualiser |
 | Aucun dépôt affiché | Vérifier la recherche, la vue choisie et les filtres propriétaire/visibilité |
 | Port 3000 déjà utilisé (`EADDRINUSE`) | Arrêter l’autre instance ou choisir un autre `PORT` ; en local, modifier aussi `APP_URL` et le callback GitHub pour utiliser ce port |
 | GitHub inaccessible en mode local | Exécuter `gh auth status`, puis `gh auth login --hostname github.com` si nécessaire |
-| Le site s’arrête quand le terminal est fermé | C’est normal en lancement manuel ; sur un serveur, configurer un service de démarrage |
+| Le site s’arrête quand le terminal est fermé | Garder le terminal ouvert pendant l’utilisation ; relancer avec `npm start` |
