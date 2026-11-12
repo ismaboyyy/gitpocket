@@ -1,6 +1,6 @@
 # Repocket ↗
 
-Retrouve tes dépôts GitHub et tes collaborations dans une petite application locale, avec recherche, filtres et tri par dernier push.
+Repocket rassemble dans une seule page les dépôts GitHub auxquels tu as accès, y compris ceux où tu es invité comme collaborateur, pour les retrouver facilement et voir lesquels ont reçu du code récemment.
 
 ## Installation pas à pas
 
