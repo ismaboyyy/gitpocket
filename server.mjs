@@ -82,6 +82,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const config = configuration();
     const port = Number(process.env.PORT || 3000);
     if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT invalide.');
-    app(undefined, config).listen(port, '127.0.0.1', () => console.log(`Repocket : ${config.origin} (${config.mode})`));
+    app(undefined, config).listen(port, '127.0.0.1', () => console.log(`GitPocket : ${config.origin} (${config.mode})`));
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

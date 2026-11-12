@@ -1,6 +1,6 @@
-# Repocket ↗
+# GitPocket ↗
 
-Repocket rassemble dans une seule page les dépôts GitHub auxquels tu as accès, y compris ceux où tu es invité comme collaborateur, pour les retrouver facilement et voir lesquels ont reçu du code récemment.
+GitPocket rassemble dans une seule page les dépôts GitHub auxquels tu as accès, y compris ceux où tu es invité comme collaborateur, pour les retrouver facilement et voir lesquels ont reçu du code récemment.
 
 ## Installation pas à pas
 
@@ -23,15 +23,15 @@ Choisis la connexion avec le navigateur et suis les instructions.
 ### 3. Télécharger l’application
 
 ```sh
-gh repo clone ismaboyyy/repocket
-cd repocket
+gh repo clone ismaboyyy/gitpocket
+cd gitpocket
 ```
 
 Le dépôt est public : chacun peut le télécharger et l’utiliser avec son propre compte GitHub.
 
 ### 4. Créer la configuration
 
-Dans le dossier `repocket`, crée un fichier nommé **`.env`** avec ce contenu :
+Dans le dossier `gitpocket`, crée un fichier nommé **`.env`** avec ce contenu :
 
 ```dotenv
 AUTH_MODE=local
@@ -49,7 +49,7 @@ npm start
 
 Aucun `npm install` n’est nécessaire.
 
-### 6. Ouvrir Repocket
+### 6. Ouvrir GitPocket
 
 Va sur **http://127.0.0.1:3000** dans ton navigateur. Tes dépôts s’affichent avec le compte connecté à l’étape 2.
 
@@ -57,7 +57,7 @@ Garde le terminal ouvert. Pour arrêter l’application : **Ctrl+C**.
 
 ## La prochaine fois
 
-Ouvre un terminal dans le dossier `repocket`, puis lance `npm start` et ouvre **http://127.0.0.1:3000**.
+Ouvre un terminal dans le dossier `gitpocket`, puis lance `npm start` et ouvre **http://127.0.0.1:3000**.
 
 ## Mettre à jour
 
@@ -72,7 +72,7 @@ Usage local uniquement avec cette configuration : ne l’expose pas sur Internet
 
 ## Proposer une amélioration
 
-Une idée, un problème ou une fonctionnalité à proposer ? [Ouvre une issue](https://github.com/ismaboyyy/repocket/issues/new) en expliquant ce que tu souhaites améliorer.
+Une idée, un problème ou une fonctionnalité à proposer ? [Ouvre une issue](https://github.com/ismaboyyy/gitpocket/issues/new) en expliquant ce que tu souhaites améliorer.
 
 Pour contribuer au code :
 
