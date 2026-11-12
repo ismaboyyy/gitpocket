@@ -27,7 +27,7 @@ gh repo clone ismaboyyy/repocket
 cd repocket
 ```
 
-Le dépôt est privé pour le moment : ton compte doit avoir reçu l’accès.
+Le dépôt est public : chacun peut le télécharger et l’utiliser avec son propre compte GitHub.
 
 ### 4. Créer la configuration
 
@@ -69,3 +69,19 @@ npm start
 ```
 
 Usage local uniquement avec cette configuration : ne l’expose pas sur Internet, car elle utilise ton compte GitHub.
+
+## Proposer une amélioration
+
+Une idée, un problème ou une fonctionnalité à proposer ? [Ouvre une issue](https://github.com/ismaboyyy/repocket/issues/new) en expliquant ce que tu souhaites améliorer.
+
+Pour contribuer au code :
+
+1. Fais un fork du dépôt et crée une branche pour ta modification.
+2. Effectue tes changements et lance `npm test`.
+3. Ouvre une **pull request** vers la branche `main`, avec une courte explication du changement.
+
+Ne partage jamais ton fichier `.env`, tes jetons ou tes secrets GitHub dans une issue ou une pull request.
+
+## Licence
+
+Projet sous [licence MIT](LICENSE) : tu peux l’utiliser, le modifier et le redistribuer en conservant la notice de licence.
