@@ -40,6 +40,16 @@ On github.com, the repos you created, the ones you collaborate on, the ones of t
 
 > **Read-only by design.** GitPocket never writes to GitHub. It asks the [GitHub CLI](https://cli.github.com/) for data and stores no token.
 
+## Install on macOS
+
+1. Install [GitHub CLI](https://cli.github.com/) and sign in with `gh auth login --hostname github.com`.
+2. Download the `.dmg` for your Mac from [GitHub Releases](https://github.com/swaiku/gitpocket/releases). Choose `aarch64` for Apple silicon or `x64` for Intel.
+3. Open the disk image and drag **GitPocket** into **Applications**. Launch **GitPocket** from Finder or Spotlight.
+
+The macOS app is ad-hoc signed. If macOS blocks your first launch, try opening GitPocket, then go to **System Settings → Privacy & Security** and choose **Open Anyway**.
+
+To build the installer from source on a Mac, install the [development requirements](#quick-start), run `bun install`, then `bun run tauri build --bundles dmg`. Tauri writes the disk image under `src-tauri/target/release/bundle/dmg/`.
+
 ## Table of contents
 
 - [Why GitPocket](#why-gitpocket)
@@ -112,8 +122,6 @@ To build an installable package instead:
 ```bash
 bun run tauri build
 ```
-
-> GitPocket is developed and tested on Linux. It uses no Linux-only API, but macOS and Windows builds have not been tested yet.
 
 ## Usage
 
@@ -208,7 +216,7 @@ Work lands on `develop` and is released from `main`, like the other projects of 
 2. Run the **Prepare release** workflow: it bumps the version (`package.json`, `tauri.conf.json`, `Cargo.toml`, `Cargo.lock`), updates `CHANGELOG.md` from the gitmoji commits and opens the `develop` → `main` pull request.
 3. Merging that pull request runs **Release**: it builds the installers for Linux, macOS (Apple silicon and Intel) and Windows, then publishes the GitHub release and its tag.
 
-The installers are not code-signed, so macOS and Windows warn on first launch. GitHub CLI must be installed and signed in on the machine that runs GitPocket.
+The macOS app is ad-hoc signed and the Windows installers are unsigned. First launch may require approval. GitHub CLI must be installed and signed in on the machine that runs GitPocket.
 
 Dependabot opens weekly update pull requests against `develop` and merges minor and patch updates once CI is green.
 

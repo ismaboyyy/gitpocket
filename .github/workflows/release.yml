@@ -6,7 +6,7 @@ name: Release
 # The release stays a draft until every platform has built, so a failed build
 # never leaves a half-published release. Uses GITHUB_TOKEN only.
 #
-# The installers are not code-signed: macOS and Windows will warn on first launch.
+# The macOS app is ad-hoc signed and Windows installers are unsigned.
 
 on:
   push:
