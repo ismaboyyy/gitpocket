@@ -1,0 +1,20 @@
+{
+  "name": "GitPocket",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": { "ghcr.io/devcontainers/features/github-cli:1": {} },
+  "containerEnv": {
+    "DISPLAY": "${localEnv:DISPLAY}",
+    "WEBKIT_DISABLE_DMABUF_RENDERER": "1"
+  },
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
+    "source=${localEnv:HOME}/Projects,target=/home/vscode/Projects,type=bind"
+  ],
+  "runArgs": ["--security-opt=label=disable"],
+  "postCreateCommand": "bun install",
+  "customizations": {
+    "vscode": {
+      "extensions": ["tauri-apps.tauri-vscode", "rust-lang.rust-analyzer", "svelte.svelte-vscode"]
+    }
+  }
+}

@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Tauri's Linux system dependencies.
+  TAURI_LINUX_DEPS: >-
+    libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev
+    libayatana-appindicator3-dev librsvg2-dev libdbus-1-dev pkg-config
+
+jobs:
+  check:
+    name: Types, tests & frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install --frozen-lockfile
+
+      - name: Type check
+        run: bun run check
+
+      - name: Test
+        run: bun test src/lib
+
+      - name: Build the frontend
+        run: bun run build
+
+  rust:
+    name: Rust check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends $TAURI_LINUX_DEPS
+
+      # tauri::generate_context! needs the built frontend (frontendDist).
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+
+      - name: Check
+        run: cargo check --locked --manifest-path src-tauri/Cargo.toml
+
+  build-app:
+    name: Build app (debug .deb)
+    # Runs in parallel with the checks. Built on every push to develop, and on
+    # PRs to main unless they come from develop (already built by the push).
+    if: >
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main' &&
+       github.head_ref != 'develop')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends $TAURI_LINUX_DEPS
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run tauri build --debug --bundles deb
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: gitpocket-debug-deb
+          path: src-tauri/target/debug/bundle/deb/*.deb
+          retention-days: 14

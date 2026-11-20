@@ -1,0 +1,44 @@
+[changelog]
+header = "# Changelog\n\n"
+# The leading gitmoji is dropped from each line by removing the first word of
+# the message (the group heading already carries the emoji). It is done here
+# rather than in commit_preprocessors, which run before commit_parsers and
+# would stop the parsers from matching the gitmoji.
+# Merge commits are dropped: GitHub may title them after the PR, gitmoji
+# included, which would list the PR's commit twice.
+body = """
+{% if version %}## {{ version }} ({{ timestamp | date(format="%d-%m-%Y") }})\n{% endif %}\
+{% for group, commits in commits | filter(attribute="merge_commit", value=false) | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}
+- {{ commit.message | split(pat="\n") | first | split(pat=" ") | slice(start=1) | join(sep=" ") | trim }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/swaiku/gitpocket/commit/{{ commit.id }}))\
+{% endfor %}
+{% endfor %}\n
+"""
+trim = true
+
+[git]
+conventional_commits = false
+filter_unconventional = false
+commit_parsers = [
+  { message = "^(🔖|Merge )", skip = true },
+  { message = "^(✨|:sparkles:)",         group = "✨ Features" },
+  { message = "^(⚡|:zap:)",              group = "✨ Features" },
+  { message = "^(💄|:lipstick:)",        group = "💄 UI & Style" },
+  { message = "^(🐛|:bug:)",              group = "🐛 Bug Fixes" },
+  { message = "^(🚑|:ambulance:)",        group = "🐛 Bug Fixes" },
+  { message = "^(♻️|:recycle:)",          group = "♻️ Refactoring" },
+  { message = "^(🎨|:art:)",              group = "♻️ Refactoring" },
+  { message = "^(📦|:package:)",          group = "📦 Build & Dependencies" },
+  { message = "^(⬆️|:arrow_up:)",         group = "📦 Build & Dependencies" },
+  { message = "^(⬇️|:arrow_down:)",       group = "📦 Build & Dependencies" },
+  { message = "^(👷|:construction_worker:)", group = "👷 CI" },
+  { message = "^(📝|:memo:)",             group = "📝 Documentation" },
+  { message = "^(🔧|:wrench:)",           group = "🔧 Configuration" },
+  { message = "^(🔨|:hammer:)",           group = "🔧 Configuration" },
+  { message = "^(✅|:white_check_mark:)", group = "✅ Tests" },
+  { message = "^(🧪|:test_tube:)",        group = "✅ Tests" },
+  { message = "^(🎉|:tada:)",             group = "🎉 Initial" },
+  { message = ".*",                        group = "🔀 Other" },
+]
+tag_pattern = "v[0-9].*"

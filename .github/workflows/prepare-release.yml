@@ -1,0 +1,73 @@
+name: Prepare release
+
+# Manual button: bumps the version and the changelog on develop (through a PR
+# merged right away, as develop only accepts PRs), then opens the release PR
+# develop → main. Merging that PR runs release.yml, which tags and publishes.
+#
+# Needs "Allow GitHub Actions to create and approve pull requests" in
+# Settings → Actions → General. PRs opened with GITHUB_TOKEN do not trigger CI;
+# develop's code was already checked when it was pushed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      part:
+        description: Part of the version to bump
+        type: choice
+        options: [patch, minor, major]
+        default: minor
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: develop
+          fetch-depth: 0 # git-cliff needs the history and tags
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Install git-cliff
+        run: |
+          uv tool install git-cliff
+          uv tool dir --bin >> "$GITHUB_PATH"
+
+      - name: Bump version and changelog
+        id: bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          version=$(uvx bump-my-version show --increment ${{ inputs.part }} new_version)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          git switch -c "bump/v$version"
+          uvx bump-my-version bump ${{ inputs.part }}
+          git push -u origin "bump/v$version"
+
+      - name: Merge the bump into develop
+        run: |
+          v=${{ steps.bump.outputs.version }}
+          gh pr create --base develop --head "bump/v$v" \
+            --title "🔖 Bump version to v$v" \
+            --body "Automatic bump from the Prepare release workflow."
+          gh pr merge "bump/v$v" --merge --delete-branch
+
+      - name: Open the release PR
+        run: |
+          v=${{ steps.bump.outputs.version }}
+          # The section the bump just prepended to the changelog.
+          awk '/^## /{n++} n==1' CHANGELOG.md > notes.md
+          gh pr create --base main --head develop \
+            --title "🔖 Release v$v" --body-file notes.md \
+            || gh pr edit develop --title "🔖 Release v$v" --body-file notes.md

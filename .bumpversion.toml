@@ -1,0 +1,36 @@
+[tool.bumpversion]
+current_version = "0.1.1"
+commit = true
+# The tag is created by CI when the release reaches main.
+tag = false
+message = "🔖 Bump version {current_version} → {new_version}"
+# Run by the "Prepare release" workflow; locally it needs git-cliff installed.
+# Prepend only the new section: release tags sit on main's merge commits, which
+# develop does not contain, so regenerating the whole file from develop would
+# merge every past release into the new one.
+allow_shell_hooks = true # the hook reads $BVHOOK_NEW_VERSION
+pre_commit_hooks = [
+  "git cliff -c .github/cliff.toml --strip header --unreleased --tag v$BVHOOK_NEW_VERSION --prepend CHANGELOG.md",
+  "git add CHANGELOG.md",
+]
+
+# The app version lives in three places, plus the lockfile entry of the crate.
+[[tool.bumpversion.files]]
+filename = "package.json"
+search = '"version": "{current_version}"'
+replace = '"version": "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "src-tauri/tauri.conf.json"
+search = '"version": "{current_version}"'
+replace = '"version": "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "src-tauri/Cargo.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "src-tauri/Cargo.lock"
+search = "name = \"gitpocket\"\nversion = \"{current_version}\""
+replace = "name = \"gitpocket\"\nversion = \"{new_version}\""
